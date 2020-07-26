@@ -1,2 +1,2 @@
 # LabelboxToTFRecord
-Convert Labelbox json format to TFRecord format.
+Download Labelbox data, and optionally convert to TFRecord format.

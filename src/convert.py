@@ -31,16 +31,11 @@ import tensorflow as tf
 import glob
 import xml.etree.ElementTree as ET
 import parse_labelbox
-
+import argparse
 from PIL import Image
 from object_detection.utils import dataset_util
 from collections import namedtuple, OrderedDict
 
-flags = tf.app.flags
-flags.DEFINE_string('csv_input', '', 'Path to the CSV input')
-flags.DEFINE_string('output_path', '', 'Path to output TFRecord')
-flags.DEFINE_string('image_dir', '', 'Path to images')
-FLAGS = flags.FLAGS
 
 def create_tf_example(group, path):
     with tf.io.gfile.GFile(os.path.join(path, '{}'.format(group.filename)), 'rb') as fid:
@@ -83,3 +78,19 @@ def create_tf_example(group, path):
         'image/object/class/label': dataset_util.int64_list_feature(classes),
     }))
     return tf_example
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Download Labelbox data, and optionally convert to TFRecord format.')
+    parser.add_argument('PUID', help="Project Unique ID (PUID) of your Labelbox project, found in URL of Labelbox project home page")
+    parser.add_argument('API_KEY', help="API key associated with your Labelbox account")
+    parser.add_argument('--dest', help="Destination folder for downloaded images", default="images")
+    parser.add_argument('--download-only', help="Use this flag if you only want to download the images and not convert to TFRecord format.", action='store_true')
+    args = parser.parse_args()
+    print(args)
+
+    if args.download_only:
+        parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.dest)
+    else:
+        tf_record_infos = parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.dest)
+
+

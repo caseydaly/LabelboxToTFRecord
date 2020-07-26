@@ -54,8 +54,6 @@ class TFRecordInfo:
     def __repr__(self):
         return "TFRecordInfo({0}, {1}, {2}, {3}, {4}, {5}, {6})".format(self.height, self.width, self.filename, self.source_id, type(self.encoded), self.format, self.labels)
 
-
-
 #create a list of img_obj dictionaries from labelbox json format
 def parse_labelbox_data(project_unique_id, api_key, local_folder):
     data = retrieve_data(project_unique_id, api_key)
@@ -118,6 +116,3 @@ def retrieve_data(project_unique_id, api_key):
         data = json.loads(response)
         #print(data)
     return data
-
-record_objs = parse_labelbox_data(api_info.PUID, api_info.API_KEY, "tmp")
-print(record_objs)

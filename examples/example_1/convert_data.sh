@@ -1,1 +1,0 @@
-python3 convert.py labelbox_data.json labels.json 
