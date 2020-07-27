@@ -56,8 +56,8 @@ class TFRecordInfo:
         return "TFRecordInfo({0}, {1}, {2}, {3}, {4}, {5}, {6})".format(self.height, self.width, self.filename, self.source_id, type(self.encoded), self.format, self.labels)
 
 #create a list of img_obj dictionaries from labelbox json format
-def parse_labelbox_data(project_unique_id, api_key, local_folder):
-    data = retrieve_data(project_unique_id, api_key)
+def parse_labelbox_data(project_unique_id, api_key, labelbox_dest):
+    data = retrieve_data(project_unique_id, api_key, labelbox_dest)
     image_format = b'jpg'
     records = list()
     for record in data:
@@ -65,13 +65,15 @@ def parse_labelbox_data(project_unique_id, api_key, local_folder):
         temp = urlparse(jpg_url)
         image_name = temp.path
         image_name = image_name[1:]
-        if not os.path.exists(local_folder):
-            os.makedirs(local_folder)
-        if local_folder[len(local_folder)-1] != '/':
-            local_folder += '/'
-        outpath = local_folder+image_name
+        if not os.path.exists(labelbox_dest):
+            os.makedirs(labelbox_dest)
+        if labelbox_dest[len(labelbox_dest)-1] != '/':
+            labelbox_dest += '/'
+        if not os.path.exists(labelbox_dest+"images"):
+            os.makedirs(labelbox_dest+"images")
+        outpath = labelbox_dest+"images/"+image_name
         if not path.exists(outpath):
-            jpg = urllib.request.urlretrieve(jpg_url, local_folder+image_name)
+            jpg = urllib.request.urlretrieve(jpg_url, outpath)
         with tf.io.gfile.GFile(outpath, 'rb') as fid:
             encoded_jpg = fid.read()
         im = Image.open(outpath)
@@ -85,19 +87,17 @@ def parse_labelbox_data(project_unique_id, api_key, local_folder):
                 labels.append(label.label_from_labelbox_obj(l))
             records.append(TFRecordInfo(height, width, outpath, outpath, encoded_jpg, image_format, labels))
     return data, records
-    #column_name = ['filename', 'width', 'height', 'class', 'xmin', 'ymin', 'xmax', 'ymax']
-    #xml_df = pd.DataFrame(xml_list, columns=column_name)
-    #return xml_df
 
 
 
 def get_classes_from_labelbox(data):
     labels_set = set()
     for record in data:
-        if "objects" in record["Label"]:
-            label_objs = record["Label"]["objects"]
-            for obj in label_objs:
-                labels_set.add(obj["value"])
+        if isinstance(record, dict):
+            if "objects" in record["Label"]:
+                label_objs = record["Label"]["objects"]
+                for obj in label_objs:
+                    labels_set.add(obj["value"])
     labels_list = list(labels_set)
     labels = {}
     for i in range(0, len(labels_list)):
@@ -105,11 +105,18 @@ def get_classes_from_labelbox(data):
     return labels
 
 #retrieve data from labelbox
-def retrieve_data(project_unique_id, api_key):
+def retrieve_data(project_unique_id, api_key, labelbox_dest):
     client = Client(api_key)
     project = client.get_project(project_unique_id)
     retrieve_url = project.export_labels()
     with urllib.request.urlopen(retrieve_url) as url:
         response = url.read()
         data = json.loads(response)
+    if not os.path.exists(labelbox_dest):
+        os.makedirs(labelbox_dest)
+    if labelbox_dest[len(labelbox_dest)-1] != '/':
+        labelbox_dest += '/'
+    outpath = labelbox_dest + project_unique_id + ".json"
+    with open(outpath, 'w') as outfile:
+        json.dump(data, outfile)
     return data

@@ -1,24 +1,3 @@
-"""
-Usage:
-  # From tensorflow/models/
-  # Create train data:
-  python generate_tfrecord.py --csv_input=data/train_labels.csv  --output_path=train.record
-  # Create test data:
-  python generate_tfrecord.py --csv_input=data/test_labels.csv  --output_path=test.record
-
-
-img_obj is of format
-{
-    'filename': the_file,
-    'width': width,
-    'height': height,
-    'class': class, 
-    'xmin': xmin, 
-    'ymin': ymin, 
-    'xmax': xmax, 
-    'ymax': ymax
-}
-"""
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
@@ -37,16 +16,9 @@ from object_detection.utils import dataset_util
 from collections import namedtuple, OrderedDict
 
 
-def create_tf_example(record_obj, data):
-    # with tf.io.gfile.GFile(os.path.join(path, '{}'.format(group.filename)), 'rb') as fid:
-    #     encoded_jpg = fid.read()
-    # encoded_jpg_io = io.BytesIO(encoded_jpg)
-    # image = Image.open(encoded_jpg_io)
-    # width, height = image.size
+def create_tf_example(record_obj, class_dict):
 
-    class_dict = parse_labelbox.get_classes_from_labelbox(data)
-
-    #filename = group.filename.encode('utf8')
+    filename = record_obj.filename.encode('utf8')
     image_format = b'jpg'
     xmins = []
     xmaxs = []
@@ -66,8 +38,8 @@ def create_tf_example(record_obj, data):
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(record_obj.height),
         'image/width': dataset_util.int64_feature(record_obj.width),
-        'image/filename': dataset_util.bytes_feature(record_obj.filename),
-        'image/source_id': dataset_util.bytes_feature(record_obj.filename),
+        'image/filename': dataset_util.bytes_feature(filename),
+        'image/source_id': dataset_util.bytes_feature(filename),
         'image/encoded': dataset_util.bytes_feature(record_obj.encoded),
         'image/format': dataset_util.bytes_feature(image_format),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
@@ -79,22 +51,35 @@ def create_tf_example(record_obj, data):
     }))
     return tf_example
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download Labelbox data, and optionally convert to TFRecord format.')
     parser.add_argument('PUID', help="Project Unique ID (PUID) of your Labelbox project, found in URL of Labelbox project home page")
     parser.add_argument('API_KEY', help="API key associated with your Labelbox account")
-    parser.add_argument('--dest', help="Destination folder for downloaded images", default="images")
+    parser.add_argument('--labelbox-dest', help="Destination folder for downloaded images and json file of Labelbox labels.", default="labelbox")
+    parser.add_argument('--tfrecord-dest', help="Destination folder for downloaded images", default="tfrecord")
     parser.add_argument('--download-only', help="Use this flag if you only want to download the images and not convert to TFRecord format.", action='store_true')
     args = parser.parse_args()
     print(args)
 
     if args.download_only:
-        parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.dest)
+        parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.labelbox_dest)
     else:
-        data, records = parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.dest)
-        ret = create_tf_example(records[0], data)
-        print(ret)
-        print(type(ret))
+        data, records = parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.labelbox_dest)
+        class_dict = parse_labelbox.get_classes_from_labelbox(data)
+        print(class_dict)
+        tfrecord_folder = args.tfrecord_dest
+        if not os.path.exists(tfrecord_folder):
+            os.makedirs(tfrecord_folder)
+        if tfrecord_folder[len(tfrecord_folder)-1] != '/':
+            tfrecord_folder += '/'
+        outfile = args.PUID + ".tfrecord"
+        outpath = tfrecord_folder + outfile
+        with tf.io.TFRecordWriter(outpath) as writer:
+            for record in records:
+                tf_example = create_tf_example(record, class_dict)
+                writer.write(tf_example.SerializeToString())
+        print('Successfully created the TFRecords at location: {}'.format(outpath))
 
     
 
