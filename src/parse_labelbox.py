@@ -26,6 +26,7 @@ from os import path
 import tensorflow as tf
 import label
 import api_info
+import time
 
 # example image url: https://m.media-amazon.com/images/S/aplus-media/vc/6a9569ab-cb8e-46d9-8aea-a7022e58c74a.jpg
 def download_image(url, image_file_path):
@@ -83,22 +84,20 @@ def parse_labelbox_data(project_unique_id, api_key, local_folder):
             for l in label_objs:
                 labels.append(label.label_from_labelbox_obj(l))
             records.append(TFRecordInfo(height, width, outpath, outpath, encoded_jpg, image_format, labels))
-    return records
+    return data, records
     #column_name = ['filename', 'width', 'height', 'class', 'xmin', 'ymin', 'xmax', 'ymax']
     #xml_df = pd.DataFrame(xml_list, columns=column_name)
     #return xml_df
 
 
 
-def get_labels_from_json(labelbox_data_path):
-    f = open(labelbox_data_path)
-    data = json.load(f)
+def get_classes_from_labelbox(data):
     labels_set = set()
     for record in data:
-        label_objs = record["Label"]["objects"]
-        for obj in label_objs:
-            labels_set.add(obj["value"])
-    #print(labels_set)
+        if "objects" in record["Label"]:
+            label_objs = record["Label"]["objects"]
+            for obj in label_objs:
+                labels_set.add(obj["value"])
     labels_list = list(labels_set)
     labels = {}
     for i in range(0, len(labels_list)):
@@ -112,7 +111,5 @@ def retrieve_data(project_unique_id, api_key):
     retrieve_url = project.export_labels()
     with urllib.request.urlopen(retrieve_url) as url:
         response = url.read()
-        #  I'm guessing this would output the html source code ?
         data = json.loads(response)
-        #print(data)
     return data

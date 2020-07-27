@@ -37,16 +37,16 @@ from object_detection.utils import dataset_util
 from collections import namedtuple, OrderedDict
 
 
-def create_tf_example(group, path):
-    with tf.io.gfile.GFile(os.path.join(path, '{}'.format(group.filename)), 'rb') as fid:
-        encoded_jpg = fid.read()
-    encoded_jpg_io = io.BytesIO(encoded_jpg)
-    image = Image.open(encoded_jpg_io)
-    width, height = image.size
+def create_tf_example(record_obj, data):
+    # with tf.io.gfile.GFile(os.path.join(path, '{}'.format(group.filename)), 'rb') as fid:
+    #     encoded_jpg = fid.read()
+    # encoded_jpg_io = io.BytesIO(encoded_jpg)
+    # image = Image.open(encoded_jpg_io)
+    # width, height = image.size
 
-    class_dict = parse_labelbox.get_labels_from_json(path)
+    class_dict = parse_labelbox.get_classes_from_labelbox(data)
 
-    filename = group.filename.encode('utf8')
+    #filename = group.filename.encode('utf8')
     image_format = b'jpg'
     xmins = []
     xmaxs = []
@@ -55,20 +55,20 @@ def create_tf_example(group, path):
     classes_text = []
     classes = []
 
-    for img_obj in group.object.iterrows():
-        xmins.append(img_obj['xmin'] / width)
-        xmaxs.append(img_obj['xmax'] / width)
-        ymins.append(img_obj['ymin'] / height)
-        ymaxs.append(img_obj['ymax'] / height)
-        classes_text.append(img_obj['class'].encode('utf8'))
-        classes.append(class_dict[img_obj['class']])
+    for label_obj in record_obj.labels:
+        xmins.append(label_obj.xmin / record_obj.width)
+        xmaxs.append(label_obj.xmax / record_obj.width)
+        ymins.append(label_obj.ymin / record_obj.height)
+        ymaxs.append(label_obj.ymax / record_obj.height)
+        classes_text.append(label_obj.label.encode('utf8'))
+        classes.append(class_dict[label_obj.label])
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
-        'image/height': dataset_util.int64_feature(height),
-        'image/width': dataset_util.int64_feature(width),
-        'image/filename': dataset_util.bytes_feature(filename),
-        'image/source_id': dataset_util.bytes_feature(filename),
-        'image/encoded': dataset_util.bytes_feature(encoded_jpg),
+        'image/height': dataset_util.int64_feature(record_obj.height),
+        'image/width': dataset_util.int64_feature(record_obj.width),
+        'image/filename': dataset_util.bytes_feature(record_obj.filename),
+        'image/source_id': dataset_util.bytes_feature(record_obj.filename),
+        'image/encoded': dataset_util.bytes_feature(record_obj.encoded),
         'image/format': dataset_util.bytes_feature(image_format),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
         'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
@@ -91,6 +91,11 @@ if __name__ == '__main__':
     if args.download_only:
         parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.dest)
     else:
-        tf_record_infos = parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.dest)
+        data, records = parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.dest)
+        ret = create_tf_example(records[0], data)
+        print(ret)
+        print(type(ret))
+
+    
 
 
