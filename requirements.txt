@@ -1,0 +1,5 @@
+pandas
+labelbox
+
+#probably some tensorflow dependencies as well
+

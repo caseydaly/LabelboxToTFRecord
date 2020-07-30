@@ -77,10 +77,17 @@ if __name__ == '__main__':
     parser.add_argument('--download-only', help="Use this flag if you only want to download the images and not convert to TFRecord format.", action='store_true')
     args = parser.parse_args()
 
+    config_path = (Path(os.path.realpath(__file__)).parent / Path("config.yaml")).resolve()
+    with open(config_path, 'r') as config_file:
+        config = yaml.safe_load(config_file)
+
+    puid = args.PUID or config['puid']
+    api_key = args.API_KEY or config['api_key']
+
     if args.download_only:
-        parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.labelbox_dest)
+        parse_labelbox.parse_labelbox_data(puid, api_key, args.labelbox_dest)
     else:
-        generate_records(args.PUID, args.API_KEY, args.labelbox_dest, args.tfrecord_dest)
+        generate_records(puid, api_key, args.labelbox_dest, args.tfrecord_dest)
 
     
 
