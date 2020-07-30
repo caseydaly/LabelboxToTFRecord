@@ -51,6 +51,22 @@ def create_tf_example(record_obj, class_dict):
     }))
     return tf_example
 
+def generate_records(puid, api_key, labelbox_dest, tfrecord_dest):
+    data, records = parse_labelbox.parse_labelbox_data(puid, api_key, labelbox_dest)
+    class_dict = parse_labelbox.get_classes_from_labelbox(data)
+    tfrecord_folder = tfrecord_dest
+    if not os.path.exists(tfrecord_folder):
+        os.makedirs(tfrecord_folder)
+    if tfrecord_folder[len(tfrecord_folder)-1] != '/':
+        tfrecord_folder += '/'
+    outfile = puid + ".tfrecord"
+    outpath = tfrecord_folder + outfile
+    with tf.io.TFRecordWriter(outpath) as writer:
+        for record in records:
+            tf_example = create_tf_example(record, class_dict)
+            writer.write(tf_example.SerializeToString())
+    print('Successfully created the TFRecords at location: {}'.format(outpath))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download Labelbox data, and optionally convert to TFRecord format.')
@@ -60,26 +76,11 @@ if __name__ == '__main__':
     parser.add_argument('--tfrecord-dest', help="Destination folder for downloaded images", default="tfrecord")
     parser.add_argument('--download-only', help="Use this flag if you only want to download the images and not convert to TFRecord format.", action='store_true')
     args = parser.parse_args()
-    print(args)
 
     if args.download_only:
         parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.labelbox_dest)
     else:
-        data, records = parse_labelbox.parse_labelbox_data(args.PUID, args.API_KEY, args.labelbox_dest)
-        class_dict = parse_labelbox.get_classes_from_labelbox(data)
-        print(class_dict)
-        tfrecord_folder = args.tfrecord_dest
-        if not os.path.exists(tfrecord_folder):
-            os.makedirs(tfrecord_folder)
-        if tfrecord_folder[len(tfrecord_folder)-1] != '/':
-            tfrecord_folder += '/'
-        outfile = args.PUID + ".tfrecord"
-        outpath = tfrecord_folder + outfile
-        with tf.io.TFRecordWriter(outpath) as writer:
-            for record in records:
-                tf_example = create_tf_example(record, class_dict)
-                writer.write(tf_example.SerializeToString())
-        print('Successfully created the TFRecords at location: {}'.format(outpath))
+        generate_records(args.PUID, args.API_KEY, args.labelbox_dest, args.tfrecord_dest)
 
     
 

@@ -25,20 +25,6 @@ import os
 from os import path
 import tensorflow as tf
 import label
-import api_info
-import time
-
-# example image url: https://m.media-amazon.com/images/S/aplus-media/vc/6a9569ab-cb8e-46d9-8aea-a7022e58c74a.jpg
-def download_image(url, image_file_path):
-    r = requests.get(url, timeout=4.0)
-    if r.status_code != requests.codes.ok: #pylint: disable=no-member
-        assert False, 'Status code error: {}.'.format(r.status_code)
-
-    with Image.open(io.BytesIO(r.content)) as im:
-        #im.save(image_file_path)
-        print(type(im))
-
-    print('Image downloaded from url: {} and saved to: {}.'.format(url, image_file_path))
 
 #contains all of the necessary info to create a tfrecord
 class TFRecordInfo:
@@ -79,8 +65,6 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest):
         im = Image.open(outpath)
         width, height = im.size
         labels = list()
-        for x in record["Label"]:
-            print(x)
         if "objects" in record["Label"]:
             label_objs = record["Label"]["objects"]
             for l in label_objs:
