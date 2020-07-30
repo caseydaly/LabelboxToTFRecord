@@ -11,6 +11,8 @@ import glob
 import xml.etree.ElementTree as ET
 import parse_labelbox
 import argparse
+import yaml
+from pathlib import Path
 from PIL import Image
 from object_detection.utils import dataset_util
 from collections import namedtuple, OrderedDict
@@ -70,8 +72,8 @@ def generate_records(puid, api_key, labelbox_dest, tfrecord_dest):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download Labelbox data, and optionally convert to TFRecord format.')
-    parser.add_argument('PUID', help="Project Unique ID (PUID) of your Labelbox project, found in URL of Labelbox project home page")
-    parser.add_argument('API_KEY', help="API key associated with your Labelbox account")
+    parser.add_argument('--puid', help="Project Unique ID (PUID) of your Labelbox project, found in URL of Labelbox project home page")
+    parser.add_argument('--api-key', help="API key associated with your Labelbox account")
     parser.add_argument('--labelbox-dest', help="Destination folder for downloaded images and json file of Labelbox labels.", default="labelbox")
     parser.add_argument('--tfrecord-dest', help="Destination folder for downloaded images", default="tfrecord")
     parser.add_argument('--download-only', help="Use this flag if you only want to download the images and not convert to TFRecord format.", action='store_true')
@@ -81,8 +83,8 @@ if __name__ == '__main__':
     with open(config_path, 'r') as config_file:
         config = yaml.safe_load(config_file)
 
-    puid = args.PUID or config['puid']
-    api_key = args.API_KEY or config['api_key']
+    puid = args.puid or config['puid']
+    api_key = args.api_key or config['api_key']
 
     if args.download_only:
         parse_labelbox.parse_labelbox_data(puid, api_key, args.labelbox_dest)
