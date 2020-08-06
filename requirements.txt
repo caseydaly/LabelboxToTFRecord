@@ -1,0 +1,6 @@
+pandas
+labelbox
+pyyaml
+
+#probably some tensorflow dependencies as well
+

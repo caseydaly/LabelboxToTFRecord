@@ -1,18 +1,3 @@
-"""
-img_obj is of format
-{
-    'filename': filename,
-    'width': width,
-    'height': height,
-    'class': class,
-    'labels': labels --- do we need this? 
-    'xmin': xmin, 
-    'ymin': ymin, 
-    'xmax': xmax, 
-    'ymax': ymax
-}
-"""
-
 from labelbox import Client
 import json
 import urllib.request
@@ -26,6 +11,7 @@ from os import path
 import tensorflow as tf
 import label
 import time
+import progressbar
 
 #contains all of the necessary info to create a tfrecord
 class TFRecordInfo:
@@ -42,12 +28,20 @@ class TFRecordInfo:
     def __repr__(self):
         return "TFRecordInfo({0}, {1}, {2}, {3}, {4}, {5}, {6})".format(self.height, self.width, self.filename, self.source_id, type(self.encoded), self.format, self.labels)
 
-#create a list of img_obj dictionaries from labelbox json format
-def parse_labelbox_data(project_unique_id, api_key, labelbox_dest):
+#download data and create a list of img_obj dictionaries from labelbox json format
+def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download):
     data = retrieve_data(project_unique_id, api_key, labelbox_dest)
     image_format = b'jpg'
     records = list()
-    for record in data:
+    print("Retrieving images from Labelbox...")
+    if download:
+        print("--download flag detected")
+        print("Downloading images locally to labelbox/images")
+    bar = progressbar.ProgressBar(maxval=len(data), \
+    widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    bar.start()
+    for i in range(len(data)):
+        record = data[i]
         jpg_url = record["Labeled Data"]
         temp = urlparse(jpg_url)
         image_name = temp.path
@@ -59,26 +53,38 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest):
         if not os.path.exists(labelbox_dest+"images"):
             os.makedirs(labelbox_dest+"images")
         outpath = labelbox_dest+"images/"+image_name
-        if not path.exists(outpath):
-            jpg = urllib.request.urlretrieve(jpg_url)
-            print("type is")
-            print(type(jpg))
-            print("temp filename is")
-            print(jpg[0])
-            time.sleep(10)
-        with tf.io.gfile.GFile(outpath, 'rb') as fid:
-            encoded_jpg = fid.read()
-        im = Image.open(outpath)
-        width, height = im.size
+
+        if download:
+            if not path.exists(outpath):
+                jpg = urllib.request.urlretrieve(jpg_url, outpath)
+            with tf.io.gfile.GFile(outpath, 'rb') as fid:
+                encoded_jpg = fid.read()
+                # print("here")
+                # print(type(encoded_jpg))
+                im = Image.open(outpath)
+                width, height = im.size
+        else:
+            with urllib.request.urlopen(jpg_url) as url:
+                encoded_jpg = io.BytesIO(url.read()).read()
+                # print(type(encoded_jpg))
+                # time.sleep(20)
+                im = Image.open(io.BytesIO(encoded_jpg))
+                width, height = im.size
         labels = list()
         if "objects" in record["Label"]:
             label_objs = record["Label"]["objects"]
             for l in label_objs:
                 labels.append(label.label_from_labelbox_obj(l))
             records.append(TFRecordInfo(height, width, outpath, outpath, encoded_jpg, image_format, labels))
+        bar.update(i+1)
+    bar.finish()
     return data, records
 
-
+# def image_to_byte_array(image:Image):
+#   imgByteArr = io.BytesIO()
+#   image.save(imgByteArr, format=image.format)
+#   imgByteArr = imgByteArr.getvalue()
+#   return imgByteArr
 
 def get_classes_from_labelbox(data):
     labels_set = set()
