@@ -25,6 +25,7 @@ import os
 from os import path
 import tensorflow as tf
 import label
+import time
 
 #contains all of the necessary info to create a tfrecord
 class TFRecordInfo:
@@ -59,7 +60,12 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest):
             os.makedirs(labelbox_dest+"images")
         outpath = labelbox_dest+"images/"+image_name
         if not path.exists(outpath):
-            jpg = urllib.request.urlretrieve(jpg_url, outpath)
+            jpg = urllib.request.urlretrieve(jpg_url)
+            print("type is")
+            print(type(jpg))
+            print("temp filename is")
+            print(jpg[0])
+            time.sleep(10)
         with tf.io.gfile.GFile(outpath, 'rb') as fid:
             encoded_jpg = fid.read()
         im = Image.open(outpath)
