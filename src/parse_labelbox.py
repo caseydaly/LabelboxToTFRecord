@@ -59,6 +59,8 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest):
             os.makedirs(labelbox_dest+"images")
         outpath = labelbox_dest+"images/"+image_name
         if not path.exists(outpath):
+            # TODO there may be a way to read the bytestream here into
+            # "encoded_jpg" instead of saving it to disk
             jpg = urllib.request.urlretrieve(jpg_url, outpath)
         with tf.io.gfile.GFile(outpath, 'rb') as fid:
             encoded_jpg = fid.read()
