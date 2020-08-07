@@ -1,3 +1,4 @@
+# vim:ts=4:sw=4:sts=4
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
@@ -56,19 +57,34 @@ def create_tf_example(record_obj, class_dict):
     }))
     return tf_example
 
+# Assumes splits add up to 100
 def splits_to_record_indices(splits, num_records):
+    print(splits)
+    if not splits or splits == [100]: return [num_records]
+    print('nto matched')
+
+    # TODO sort splits smallest first?
+    prev_idx = 0
     img_indices = []
-    # TODO handle when splits is empty, there's no records, etc.
-    for split_idx,split in enumerate(splits):
-        if split_idx == 0:
-            prev_idx = 0
-        else:
-           prev_idx = img_indices[split_idx - 1]
+    for split_idx,split in enumerate(splits[:-1]):
 
+
+        print('startagain')
+        print(prev_idx)
+        print(img_indices)
+        print('end')
         end_img_idx = round(prev_idx + (split / 100) * num_records)
+        print('endidx:{}'.format(end_img_idx))
 
-        img_indices += [min(end_img_idx, num_records - 1)]
-    return img_indices
+        if end_img_idx == prev_idx:
+            print("Split {}% is too small for this number of records. Skipping...".format(split)) 
+            #Leave in dupes for now. Take out at the end
+        else:
+            img_indices += [min(end_img_idx, num_records)]
+        prev_idx = end_img_idx
+
+    # Dedupe
+    return list(OrderedDict.fromkeys(img_indices))
 
 def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, download):
     data, records = parse_labelbox.parse_labelbox_data(puid, api_key, labelbox_dest, download)
