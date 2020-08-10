@@ -53,4 +53,11 @@ To split data into two groups, with 30% in the first and 70% in the second, whil
 `python convert.py --download --split 30 70`
 
 
+# Tests
 
+To run the tests:
+
+```
+cd src
+python -m unittest
+```

@@ -1,3 +1,4 @@
+# vim:ts=4:sw=4:sts=4
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
@@ -56,19 +57,30 @@ def create_tf_example(record_obj, class_dict):
     }))
     return tf_example
 
+# Convert a list of percentages adding to 100, ie [20, 30, 50] to a list of indices into the list of records
+# at which to split off a new file
 def splits_to_record_indices(splits, num_records):
-    img_indices = []
-    # TODO handle when splits is empty, there's no records, etc.
-    for split_idx,split in enumerate(splits):
-        if split_idx == 0:
-            prev_idx = 0
-        else:
-           prev_idx = img_indices[split_idx - 1]
+    if splits is None or splits == []:
+        splits = [100]
+    if sum(splits) != 100: raise ValueError("Percentages must add to 100")
+    if not splits or splits == [100]: return [num_records]
 
+    prev_idx = 0
+    img_indices = []
+    for split_idx,split in enumerate(splits[:-1]):
         end_img_idx = round(prev_idx + (split / 100) * num_records)
 
-        img_indices += [min(end_img_idx, num_records - 1)]
-    return img_indices
+        if end_img_idx == prev_idx:
+            #Leave in dupes for now. Take out at the end
+            pass
+        else:
+            img_indices += [min(end_img_idx, num_records)]
+        prev_idx = end_img_idx
+
+    # Adding the last index this way ensures that it isn't rounded down
+    img_indices += [num_records]
+    # Dedupe
+    return list(OrderedDict.fromkeys(img_indices))
 
 def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, download):
     data, records = parse_labelbox.parse_labelbox_data(puid, api_key, labelbox_dest, download)
@@ -81,17 +93,22 @@ def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, downlo
         tfrecord_folder += '/'
 
     strnow = datetime.now().strftime('%Y-%m-%dT%H%M')
-    #RESUME
+    splits = splits_to_record_indices(splits, len(records))
+    assert splits[-1] == len(records), f'{splits}, {len(records)}'
 
-    outfile = puid + ".tfrecord"
-    outpath = tfrecord_folder + outfile
-    with tf.io.TFRecordWriter(outpath) as writer:
-        # TODO use a seed-based random so it's the same every time
-        random.shuffle(records)
-        for record in records:
-            tf_example = create_tf_example(record, class_dict)
-            writer.write(tf_example.SerializeToString())
-    print('Successfully created the TFRecords at location: {}'.format(outpath))
+    split_start = 0
+    print(f'Creating {len(splits)} TFRecord files:')
+    for split_end in splits:
+        outfile = f'{puid}_{strnow}_{split_end - split_start}.tfrecord'
+        outpath = tfrecord_folder + outfile
+        with tf.io.TFRecordWriter(outpath) as writer:
+            # TODO use a seed-based random so it's the same every time
+            random.shuffle(records)
+            for record in records[split_start:split_end]:
+                tf_example = create_tf_example(record, class_dict)
+                writer.write(tf_example.SerializeToString())
+        print('Successfully created TFRecord file at location: {}'.format(outpath))
+        split_start = split_end
 
 def validate_splits(args_splits):
     if not args_splits:
@@ -106,6 +123,8 @@ def validate_splits(args_splits):
             parser.error("splits must sum up to <= 100")
         else:
             splits = args_splits
+
+    splits.sort()
 
     return splits
 

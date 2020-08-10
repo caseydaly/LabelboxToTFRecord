@@ -5,3 +5,7 @@ tfrecord/
 api_info.py
 *.swp
 *~
+__pycache__
+src/config.yaml
+
+.idea/
