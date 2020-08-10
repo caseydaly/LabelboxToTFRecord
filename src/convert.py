@@ -115,7 +115,7 @@ if __name__ == '__main__':
     parser.add_argument('--puid', help="Project Unique ID (PUID) of your Labelbox project, found in URL of Labelbox project home page")
     parser.add_argument('--api-key', help="API key associated with your Labelbox account")
     parser.add_argument('--labelbox-dest', help="Destination folder for downloaded images and json file of Labelbox labels.", default="labelbox")
-    parser.add_argument('--tfrecord-dest', help="Destination folder for downloaded images", default="tfrecord")
+    parser.add_argument('--tfrecord-dest', help="Destination folder for .tfrecord file(s)", default="tfrecord")
     parser.add_argument('--splits', help="Space-separated list of integer percentages for splitting the " +
         "output into multiple TFRecord files instead of one. Sum of values should be <=100. " +
         "Example: '--splits 10 70' will write 3 files with 10%%, 70%%, and 20%% of the data, respectively",

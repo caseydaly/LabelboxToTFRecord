@@ -50,24 +50,20 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download):
             os.makedirs(labelbox_dest)
         if labelbox_dest[len(labelbox_dest)-1] != '/':
             labelbox_dest += '/'
-        if not os.path.exists(labelbox_dest+"images"):
-            os.makedirs(labelbox_dest+"images")
-        outpath = labelbox_dest+"images/"+image_name
 
         if download:
+            if not os.path.exists(labelbox_dest+"images"):
+                os.makedirs(labelbox_dest+"images")
+            outpath = labelbox_dest+"images/"+image_name
             if not path.exists(outpath):
                 jpg = urllib.request.urlretrieve(jpg_url, outpath)
             with tf.io.gfile.GFile(outpath, 'rb') as fid:
                 encoded_jpg = fid.read()
-                # print("here")
-                # print(type(encoded_jpg))
                 im = Image.open(outpath)
                 width, height = im.size
         else:
             with urllib.request.urlopen(jpg_url) as url:
                 encoded_jpg = io.BytesIO(url.read()).read()
-                # print(type(encoded_jpg))
-                # time.sleep(20)
                 im = Image.open(io.BytesIO(encoded_jpg))
                 width, height = im.size
         labels = list()
