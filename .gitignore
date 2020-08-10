@@ -8,3 +8,4 @@ api_info.py
 __pycache__
 src/config.yaml
 
+.idea/
