@@ -62,6 +62,7 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download):
                 im = Image.open(outpath)
                 width, height = im.size
         else:
+            outpath = ""
             with urllib.request.urlopen(jpg_url) as url:
                 encoded_jpg = io.BytesIO(url.read()).read()
                 im = Image.open(io.BytesIO(encoded_jpg))
