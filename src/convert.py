@@ -19,8 +19,23 @@ from datetime import datetime
 from pathlib import Path
 from PIL import Image
 from object_detection.utils import dataset_util
+
+from object_detection.protos import string_int_label_map_pb2
+from google.protobuf import text_format
+
 from collections import namedtuple, OrderedDict
 
+# Maps a { 'shark': 1, 'person': 2 } dict to a labelmap structure
+# for the pbtxt file
+def class_dict_to_label_map_str(class_dict):
+    label_map_proto = string_int_label_map_pb2.StringIntLabelMap()
+    for key,val in class_dict.items():
+        item = label_map_proto.item.add()
+        item.name = key
+        # 0 is reserved for 'background' only, which we aren't using
+        item.id = val + 1
+
+    return text_format.MessageToString(label_map_proto)
 
 def create_tf_example(record_obj, class_dict):
 
@@ -109,6 +124,13 @@ def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, downlo
                 writer.write(tf_example.SerializeToString())
         print('Successfully created TFRecord file at location: {}'.format(outpath))
         split_start = split_end
+
+    pb_file_name = f'{puid}_{strnow}.pbtxt'
+    label_text = class_dict_to_label_map_str(class_dict)
+    with open(tfrecord_folder + pb_file_name, 'w') as label_file:
+        print(f'Creating label map file')
+        label_file.write(label_text)
+
 
 def validate_splits(args_splits):
     if not args_splits:
