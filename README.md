@@ -1,7 +1,28 @@
 # LabelboxToTFRecord
 Convert Labelbox style json files to TFRecord file format (.tfrecord files) so the data can be used with TensorFlow.
 
+## Installation
+
+### Python Installation using Tensorflow 2:
 You must have TensorFlow's Object Detection API installed, directions for installation can be found here: https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2.md
+
+Then run
+
+`python3 -m pip install -r requirements.txt`
+
+### Docker Setup using Tensorflow 1:
+
+```
+# From project root
+docker build -t lb2tf .
+mkdir data
+
+# This will run convert.py, downloading the data to a ./data folder
+docker run --mount "type=bind,src=${PWD}/data,dst=/data" lb2tf --split 80 20 --download --labelbox-dest /data/labelbox --tfrecord-dest /data/tfrecord
+```
+Change the mount src to change where the data is downloaded to.
+
+*NOTE:* if you have downloaded a large amount of data in your project, when `docker build` runs it will copy the data as part of the context which may take a long time. To avoid this, either move downloaded data outside of the project folder before doing a build, use mount settings to save the data outside the project folder to begin with, or use a dockerignore file to ignore the data once downloaded.
 
 ## Usage:
 
@@ -51,7 +72,6 @@ To split data into two groups, with 30% in the first and 70% in the second...
 To split data into two groups, with 30% in the first and 70% in the second, while downloading images locally...
 
 `python convert.py --download --split 30 70`
-
 
 # Tests
 

@@ -6,7 +6,6 @@ from __future__ import absolute_import
 import os
 import io
 import sys
-import pandas as pd
 import tensorflow as tf
 import glob
 import xml.etree.ElementTree as ET
@@ -68,6 +67,9 @@ def create_tf_example(record_obj, class_dict):
         'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
         'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
         'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
+        'image/key/sha256': dataset_util.bytes_feature(record_obj.sha_key.encode('utf8')),
+        'image/labelbox/datarow_id': dataset_util.bytes_feature(record_obj.labelbox_rowid.encode('utf8')),
+        'images/labelbox/view_url': dataset_util.bytes_feature(record_obj.labelbox_url.encode('utf8')),
         'image/object/class/label': dataset_util.int64_list_feature(classes),
     }))
     return tf_example
