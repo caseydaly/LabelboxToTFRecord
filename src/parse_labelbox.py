@@ -33,7 +33,7 @@ class TFRecordInfo:
         return "TFRecordInfo({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})".format(self.height, self.width, self.filename, self.source_id, type(self.encoded), self.format, self.sha_key, self.labelbox_rowid, self.labels)
 
 #download data and create a list of img_obj dictionaries from labelbox json format
-def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download):
+def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download, limit):
     data = retrieve_data(project_unique_id, api_key, labelbox_dest)
     image_format = b'jpg'
     records = list()
@@ -41,10 +41,13 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download):
     if download:
         print("--download flag detected")
         print("Downloading images locally to labelbox/images")
-    bar = progressbar.ProgressBar(maxval=len(data), \
+    if len(data) > limit:
+        print ("--limit flag detected")
+        print(f"Found {len(data)} items but limiting to {limit}")
+    bar = progressbar.ProgressBar(maxval=min(len(data), limit), \
         widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     bar.start()
-    for i in range(len(data)):
+    for i in range(min(len(data), limit)):
         record = data[i]
 
         # TODO Maybe we want some images without labels
@@ -94,6 +97,7 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download):
             print(f"DataRow {record['DataRow ID']} has no labels. Skipping. See more at {record['View Label']}\n")
         bar.update(i+1)
     bar.finish()
+    assert len(records) == min(len(data), limit)
     return data, records
 
 # def image_to_byte_array(image:Image):

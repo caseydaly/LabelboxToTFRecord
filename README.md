@@ -12,6 +12,8 @@ Then run
 
 ### Docker Setup using Tensorflow 1:
 
+Assuming you have a config.yaml file set up (see Examples section):
+
 ```
 # From project root
 docker build -t lb2tf .
