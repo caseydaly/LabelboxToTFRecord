@@ -6,7 +6,6 @@ from __future__ import absolute_import
 import os
 import io
 import sys
-import pandas as pd
 import tensorflow as tf
 import glob
 import xml.etree.ElementTree as ET
@@ -18,8 +17,8 @@ import progressbar
 from datetime import datetime
 from pathlib import Path
 from PIL import Image
-from object_detection.utils import dataset_util
 
+from object_detection.utils import dataset_util
 from object_detection.protos import string_int_label_map_pb2
 from google.protobuf import text_format
 
@@ -68,6 +67,9 @@ def create_tf_example(record_obj, class_dict):
         'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
         'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
         'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
+        'image/key/sha256': dataset_util.bytes_feature(record_obj.sha_key.encode('utf8')),
+        'image/labelbox/datarow_id': dataset_util.bytes_feature(record_obj.labelbox_rowid.encode('utf8')),
+        'images/labelbox/view_url': dataset_util.bytes_feature(record_obj.labelbox_url.encode('utf8')),
         'image/object/class/label': dataset_util.int64_list_feature(classes),
     }))
     return tf_example
@@ -97,8 +99,8 @@ def splits_to_record_indices(splits, num_records):
     # Dedupe
     return list(OrderedDict.fromkeys(img_indices))
 
-def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, download):
-    data, records = parse_labelbox.parse_labelbox_data(puid, api_key, labelbox_dest, download)
+def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, download, limit):
+    data, records = parse_labelbox.parse_labelbox_data(puid, api_key, labelbox_dest, download, limit)
     print("Creating .tfrecord files")
     class_dict = parse_labelbox.get_classes_from_labelbox(data)
     tfrecord_folder = tfrecord_dest
@@ -111,14 +113,15 @@ def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, downlo
     splits = splits_to_record_indices(splits, len(records))
     assert splits[-1] == len(records), f'{splits}, {len(records)}'
 
+    # TODO use a seed-based random so it's the same every time
+    random.shuffle(records)
+
     split_start = 0
     print(f'Creating {len(splits)} TFRecord files:')
     for split_end in splits:
         outfile = f'{puid}_{strnow}_{split_end - split_start}.tfrecord'
         outpath = tfrecord_folder + outfile
         with tf.io.TFRecordWriter(outpath) as writer:
-            # TODO use a seed-based random so it's the same every time
-            random.shuffle(records)
             for record in records[split_start:split_end]:
                 tf_example = create_tf_example(record, class_dict)
                 writer.write(tf_example.SerializeToString())
@@ -157,6 +160,7 @@ if __name__ == '__main__':
     parser.add_argument('--api-key', help="API key associated with your Labelbox account")
     parser.add_argument('--labelbox-dest', help="Destination folder for downloaded images and json file of Labelbox labels.", default="labelbox")
     parser.add_argument('--tfrecord-dest', help="Destination folder for .tfrecord file(s)", default="tfrecord")
+    parser.add_argument('--limit', help="Only retrieve and convert the first LIMIT data items", type=int, default=2**1000)
     parser.add_argument('--splits', help="Space-separated list of integer percentages for splitting the " +
         "output into multiple TFRecord files instead of one. Sum of values should be <=100. " +
         "Example: '--splits 10 70' will write 3 files with 10%%, 70%%, and 20%% of the data, respectively",
@@ -174,7 +178,7 @@ if __name__ == '__main__':
     api_key = args.api_key or config['api_key']
     splits = validate_splits(args.splits)
 
-    generate_records(puid, api_key, args.labelbox_dest, args.tfrecord_dest, splits, args.download)
+    generate_records(puid, api_key, args.labelbox_dest, args.tfrecord_dest, splits, args.download, args.limit)
 
     
 
