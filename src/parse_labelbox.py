@@ -13,6 +13,7 @@ import label
 import time
 import progressbar
 import hashlib
+import re
 
 #contains all of the necessary info to create a tfrecord
 class TFRecordInfo:
@@ -92,7 +93,10 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download, lim
             label_objs = record["Label"]["objects"]
             for l in label_objs:
                 labels.append(label.label_from_labelbox_obj(l))
-            records.append(TFRecordInfo(height, width, outpath, outpath, encoded_jpg, image_format, sha_key, record["DataRow ID"], record["View Label"], labels))
+
+            source_id = re.sub(r'\.(jpe?g|png)$', '', f"{record['DataRow ID']}-{record['External ID']}")
+            source_id = re.sub(r'\.','_', source_id)
+            records.append(TFRecordInfo(height, width, record["External ID"], source_id, encoded_jpg, image_format, sha_key, record["DataRow ID"], record["View Label"], labels))
         else:
             print(f"DataRow {record['DataRow ID']} has no labels. Skipping. See more at {record['View Label']}\n")
         bar.update(i+1)
