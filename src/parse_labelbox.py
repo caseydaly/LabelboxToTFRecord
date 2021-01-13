@@ -48,6 +48,7 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download, lim
     bar = progressbar.ProgressBar(maxval=min(len(data), limit), \
         widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     bar.start()
+    skipped = 0
     for i in range(min(len(data), limit)):
         record = data[i]
 
@@ -98,10 +99,15 @@ def parse_labelbox_data(project_unique_id, api_key, labelbox_dest, download, lim
             source_id = re.sub(r'\.','_', source_id)
             records.append(TFRecordInfo(height, width, record["External ID"], source_id, encoded_jpg, image_format, sha_key, record["DataRow ID"], record["View Label"], labels))
         else:
+            skipped += 1
             print(f"DataRow {record['DataRow ID']} has no labels. Skipping. See more at {record['View Label']}\n")
         bar.update(i+1)
     bar.finish()
-    assert len(records) == min(len(data), limit)
+
+    print(f"Found {len(data)} images:")
+    print(f"  Saved: {len(records)}")
+    print(f"  Skipped: {skipped}")
+
     return data, records
 
 # def image_to_byte_array(image:Image):
