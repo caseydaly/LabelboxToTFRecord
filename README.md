@@ -10,7 +10,7 @@ Then run
 
 `python3 -m pip install -r requirements.txt`
 
-### Docker Setup using Tensorflow 1:
+### Docker Installation using Tensorflow 1:
 
 Assuming you have a config.yaml file set up (see Examples section):
 

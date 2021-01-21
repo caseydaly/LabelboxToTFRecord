@@ -59,7 +59,7 @@ def create_tf_example(record_obj, class_dict):
         'image/height': dataset_util.int64_feature(record_obj.height),
         'image/width': dataset_util.int64_feature(record_obj.width),
         'image/filename': dataset_util.bytes_feature(filename),
-        'image/source_id': dataset_util.bytes_feature(filename),
+        'image/source_id': dataset_util.bytes_feature(record_obj.source_id.encode('utf8')),
         'image/encoded': dataset_util.bytes_feature(record_obj.encoded),
         'image/format': dataset_util.bytes_feature(image_format),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
