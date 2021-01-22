@@ -30,6 +30,8 @@ If you encounter permissions denied errors, check to see that docker hasn't crea
 
 ## Usage:
 
+#### convert.py
+
     usage: convert.py [-h] [--puid PUID] [--api-key API_KEY]
                   [--labelbox-dest LABELBOX_DEST]
                   [--tfrecord-dest TFRECORD_DEST]
@@ -60,6 +62,22 @@ If you encounter permissions denied errors, check to see that docker hasn't crea
       --download            Save the images locally in addition to creating
                         TFRecord(s)
 
+#### split.py
+
+    usage: split.py [-h] infile splits [splits ...]
+
+    Split a .tfrecord file into smaller files
+
+    positional arguments:
+      infile      the .tfrecord file to split
+      splits      Space-separated list of integers, the number of records to put
+                  in each output file. Should add up to the total number of
+                  records in the input tfrecord file.
+
+    optional arguments:
+      -h, --help  show this help message and exit
+
+
 ## Examples
 
 Download Labelbox images and convert labels to TFRecord format:
@@ -77,6 +95,12 @@ To split data into two groups, with 30% in the first and 70% in the second...
 To split data into two groups, with 30% in the first and 70% in the second, while downloading images locally...
 
 `python convert.py --download --split 30 70`
+
+You can also split an existing .tfrecord file into smaller pieces with split.py:
+
+`python split.py ./10_record_file.tfrecord 3 2 5`
+
+This will write 3 new files containing 3, 2, and 5 records, respectively.
 
 # Tests
 

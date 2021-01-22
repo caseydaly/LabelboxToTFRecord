@@ -121,6 +121,7 @@ def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, downlo
     for split_end in splits:
         outfile = f'{puid}_{strnow}_{split_end - split_start}.tfrecord'
         outpath = tfrecord_folder + outfile
+        # TODO explore turning on gzip compression here
         with tf.io.TFRecordWriter(outpath) as writer:
             for record in records[split_start:split_end]:
                 tf_example = create_tf_example(record, class_dict)
