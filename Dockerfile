@@ -9,9 +9,7 @@ RUN apt-get update && apt-get install -y \
     protobuf-compiler
 
 RUN python -m pip install -U pip
-
-COPY requirements.txt requirements.txt
-RUN python -m pip install -r requirements.txt
+RUN python -m pip install mypy
 
 # Currently using xdhmoore's repo to ensure compatibility for xdhmoore's stuff. Uncomment to use the main repo instead,
 # Though it's probably advisable to pin to a specific commit, not master (since master changes often)
@@ -26,13 +24,18 @@ RUN cd /tfmodels/research && python -m pip install .
 RUN useradd -ms /bin/bash labelboxtotfrecord
 
 USER labelboxtotfrecord
-WORKDIR /home/labelboxtotfrecord/src
+WORKDIR /home/labelboxtotfrecord/LabelboxToTFRecord
+
+COPY requirements.txt requirements.txt
+RUN python -m pip install -r requirements.txt
+
 
 # TODO fix this so it doesn't copy api key?
 # The python code could also be changed to use environment variables
-COPY src /home/labelboxtotfrecord/src
+COPY src /home/labelboxtotfrecord/LabelboxToTFRecord/src
 
 VOLUME ["/data"]
 
-ENTRYPOINT [ "python3", "/home/labelboxtotfrecord/src/convert.py" ]
+# TODO tweak this to make it possible to call split.py or shuffle.py
+ENTRYPOINT [ "python3", "/home/labelboxtotfrecord/LabelboxToTFRecord/src/convert.py" ]
 CMD [ "--help" ]

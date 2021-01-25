@@ -77,6 +77,20 @@ If you encounter permissions denied errors, check to see that docker hasn't crea
     optional arguments:
       -h, --help  show this help message and exit
 
+#### shuffle.py
+
+    usage: shuffle.py [-h] tfrfile randfile
+
+    Shuffle a .tfrecord file using a random numbers file
+
+    positional arguments:
+      tfrfile     the .tfrecord file to shuffle
+      randfile    A file containing a shuffled sequence of newline-separated
+                  numbers from 0 to N-1, where N is the number of records in the
+                  .tfrecord file.
+
+    optional arguments:
+      -h, --help  show this help message and exit
 
 ## Examples
 
@@ -101,6 +115,15 @@ You can also split an existing .tfrecord file into smaller pieces with split.py:
 `python split.py ./10_record_file.tfrecord 3 2 5`
 
 This will write 3 new files containing 3, 2, and 5 records, respectively.
+To copy a .tfrecord file into a new file, shuffling the records according to a provided random_ints.txt
+file:
+
+`python shuffle.py ./10_record_file.tfrecord random_seq.txt`
+
+`random_seq.txt` should be a file of all the indices into the tfrecord file,
+[0,N), where N is the number of records in the tfrecord file, each index
+occurs exactly once, and there is one index per line. This allows you to
+shuffle the tfrecord file using random data like from random.org.
 
 # Tests
 

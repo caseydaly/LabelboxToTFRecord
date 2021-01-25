@@ -1,6 +1,9 @@
 {
     "dockerFile": "Dockerfile",
 
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/labelboxtotfrecord/LabelboxToTFRecord,type=bind",
+    "workspaceFolder": "/home/labelboxtotfrecord/LabelboxToTFRecord",
+
     "extensions": [
         "ms-python.python", "ms-python.vscode-pylance", "ms-azuretools.vscode-docker",
     ],
