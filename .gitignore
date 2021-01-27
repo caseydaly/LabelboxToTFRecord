@@ -6,6 +6,7 @@ api_info.py
 *.swp
 *~
 __pycache__
+.mypy_cache/
 src/config.yaml
 
 .idea/
