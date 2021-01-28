@@ -92,6 +92,19 @@ If you encounter permissions denied errors, check to see that docker hasn't crea
     optional arguments:
       -h, --help  show this help message and exit
 
+#### join.py
+
+    usage: join.py [-h] outfile infiles [infiles ...]
+
+    Combine several .tfrecord files into a new one
+
+    positional arguments:
+      outfile     the name of the output file
+      infiles     files to be combined
+
+    optional arguments:
+      -h, --help  show this help message and exit
+
 ## Examples
 
 Download Labelbox images and convert labels to TFRecord format:
@@ -124,6 +137,10 @@ file:
 [0,N), where N is the number of records in the tfrecord file, each index
 occurs exactly once, and there is one index per line. This allows you to
 shuffle the tfrecord file using random data like from random.org.
+
+To copy several `.tfrecord` files into a new combined file:
+
+`python join.py outfile.tfrecord infile1.tfrecord infile2.tfrecord infile3.tfrecord`
 
 # Tests
 
