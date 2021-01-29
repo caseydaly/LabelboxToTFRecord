@@ -30,6 +30,8 @@ If you encounter permissions denied errors, check to see that docker hasn't crea
 
 ## Usage:
 
+#### convert.py
+
     usage: convert.py [-h] [--puid PUID] [--api-key API_KEY]
                   [--labelbox-dest LABELBOX_DEST]
                   [--tfrecord-dest TFRECORD_DEST]
@@ -60,6 +62,49 @@ If you encounter permissions denied errors, check to see that docker hasn't crea
       --download            Save the images locally in addition to creating
                         TFRecord(s)
 
+#### split.py
+
+    usage: split.py [-h] infile splits [splits ...]
+
+    Split a .tfrecord file into smaller files
+
+    positional arguments:
+      infile      the .tfrecord file to split
+      splits      Space-separated list of integers, the number of records to put
+                  in each output file. Should add up to the total number of
+                  records in the input tfrecord file.
+
+    optional arguments:
+      -h, --help  show this help message and exit
+
+#### shuffle.py
+
+    usage: shuffle.py [-h] tfrfile randfile
+
+    Shuffle a .tfrecord file using a random numbers file
+
+    positional arguments:
+      tfrfile     the .tfrecord file to shuffle
+      randfile    A file containing a shuffled sequence of newline-separated
+                  numbers from 0 to N-1, where N is the number of records in the
+                  .tfrecord file.
+
+    optional arguments:
+      -h, --help  show this help message and exit
+
+#### join.py
+
+    usage: join.py [-h] outfile infiles [infiles ...]
+
+    Combine several .tfrecord files into a new one
+
+    positional arguments:
+      outfile     the name of the output file
+      infiles     files to be combined
+
+    optional arguments:
+      -h, --help  show this help message and exit
+
 ## Examples
 
 Download Labelbox images and convert labels to TFRecord format:
@@ -77,6 +122,25 @@ To split data into two groups, with 30% in the first and 70% in the second...
 To split data into two groups, with 30% in the first and 70% in the second, while downloading images locally...
 
 `python convert.py --download --split 30 70`
+
+You can also split an existing .tfrecord file into smaller pieces with split.py:
+
+`python split.py ./10_record_file.tfrecord 3 2 5`
+
+This will write 3 new files containing 3, 2, and 5 records, respectively.
+To copy a .tfrecord file into a new file, shuffling the records according to a provided random_ints.txt
+file:
+
+`python shuffle.py ./10_record_file.tfrecord random_seq.txt`
+
+`random_seq.txt` should be a file of all the indices into the tfrecord file,
+[0,N), where N is the number of records in the tfrecord file, each index
+occurs exactly once, and there is one index per line. This allows you to
+shuffle the tfrecord file using random data like from random.org.
+
+To copy several `.tfrecord` files into a new combined file:
+
+`python join.py outfile.tfrecord infile1.tfrecord infile2.tfrecord infile3.tfrecord`
 
 # Tests
 

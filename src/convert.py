@@ -113,7 +113,9 @@ def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, downlo
     splits = splits_to_record_indices(splits, len(records))
     assert splits[-1] == len(records), f'{splits}, {len(records)}'
 
-    # TODO use a seed-based random so it's the same every time
+    # Apparently, when len(records) > 2080, we only get a subset
+    # of all possible shuffling orders, but I don't *think* it matters?
+    # See https://stackoverflow.com/questions/3062741/maximal-length-of-list-to-shuffle-with-python-random-shuffle
     random.shuffle(records)
 
     split_start = 0
@@ -121,6 +123,7 @@ def generate_records(puid, api_key, labelbox_dest, tfrecord_dest, splits, downlo
     for split_end in splits:
         outfile = f'{puid}_{strnow}_{split_end - split_start}.tfrecord'
         outpath = tfrecord_folder + outfile
+        # TODO explore turning on gzip compression here
         with tf.io.TFRecordWriter(outpath) as writer:
             for record in records[split_start:split_end]:
                 tf_example = create_tf_example(record, class_dict)
