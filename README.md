@@ -105,6 +105,21 @@ If you encounter permissions denied errors, check to see that docker hasn't crea
     optional arguments:
       -h, --help  show this help message and exit
 
+
+#### count.py
+
+    usage: count.py [-h] [--total] infiles [infiles ...]
+
+    Display the number of records in each file
+
+    positional arguments:
+      infiles     files with records to be counted
+
+    optional arguments:
+      -h, --help  show this help message and exit
+      --total     instead of the the total for each file, display the sum total
+                  across all files
+
 ## Examples
 
 Download Labelbox images and convert labels to TFRecord format:
@@ -141,6 +156,10 @@ shuffle the tfrecord file using random data like from random.org.
 To copy several `.tfrecord` files into a new combined file:
 
 `python join.py outfile.tfrecord infile1.tfrecord infile2.tfrecord infile3.tfrecord`
+
+To display the number of records in each of files `pets_train.tfrecord` and `pets_val.tfrecord`...
+
+`python count.py pets_train.tfrecord pets_val.tfrecord`
 
 # Tests
 
