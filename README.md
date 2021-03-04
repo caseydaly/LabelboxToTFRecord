@@ -108,17 +108,19 @@ If you encounter permissions denied errors, check to see that docker hasn't crea
 
 #### count.py
 
-    usage: count.py [-h] [--total] infiles [infiles ...]
+    usage: count.py [-h] [--total | --categories] infiles [infiles ...]
 
     Display the number of records in each file
 
     positional arguments:
-      infiles     files with records to be counted
+      infiles           files with records to be counted
 
     optional arguments:
-      -h, --help  show this help message and exit
-      --total     instead of the the total for each file, display the sum total
-                  across all files
+      -h, --help        show this help message and exit
+      --total, -t       instead of the the total for each file, display the sum
+                        total across all files
+      --categories, -c  display the number of labels of each category for each
+                        file
 
 ## Examples
 
@@ -160,6 +162,25 @@ To copy several `.tfrecord` files into a new combined file:
 To display the number of records in each of files `pets_train.tfrecord` and `pets_val.tfrecord`...
 
 `python count.py pets_train.tfrecord pets_val.tfrecord`
+
+To display a table of the number of records in each category (shark, dolphin, etc.) in all files with "train" in the name...
+
+`python count.py -c *train*.tfrecord`
+
+The above prints something like:
+```
+2021-03-04 00:21:34.523331: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2021-03-04 00:21:34.531411: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 1992000000 Hz
+2021-03-04 00:21:34.532907: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x42a1fd0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2021-03-04 00:21:34.532962: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+filename                               total    sealion    person    dolphin    shark    boat
+-----------------------------------  -------  ---------  --------  ---------  -------  ------
+2021-01-26_cv_a_train_2824.tfrecord     2824          0      3078        712     2512     165
+2021-01-26_cv_b_train_2824.tfrecord     2824          1      3188        689     2472     173
+2021-01-26_cv_c_train_2824.tfrecord     2824          1      3201        686     2493     173
+2021-01-26_cv_d_train_2824.tfrecord     2824          1      2977        729     2488     176
+2021-01-26_cv_e_train_2824.tfrecord     2824          1      3132        680     2491     173
+```
 
 # Tests
 
