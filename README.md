@@ -1,5 +1,5 @@
 # LabelboxToTFRecord
-Convert Labelbox style json files to TFRecord file format (.tfrecord files) so the data can be used with TensorFlow.
+Download data from Labelbox and convert to TFRecord file format (.tfrecord files) so the data can be used with TensorFlow.
 
 ## Installation
 
