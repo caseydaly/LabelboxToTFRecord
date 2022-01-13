@@ -1,5 +1,5 @@
 labelbox==2.4.3
 PyYAML==5.3.1
 progressbar==2.5
-pillow==7.2.0
+pillow==9.0.0
 tabulate==0.8.7
